@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'authentication/authentication_service.dart';
+import 'routes/home_page.dart';
+import 'routes/sign_in.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,31 +28,25 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Flutter Demo',
+        title: 'Hospital App',
         theme: ThemeData(
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: Home(),
+        home: AuthenticationWrapper(),
       ),
     );
   }
 }
 
-class Home extends StatelessWidget {
+class AuthenticationWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: HomeBody(),
-    );
-  }
-}
+    final firebaseUser = context.watch<User>();
 
-class HomeBody extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Center(child: Text('ABC')),
-    );
+    if (firebaseUser != null) {
+      return HomePage();
+    }
+    return SignInPage();
   }
 }
