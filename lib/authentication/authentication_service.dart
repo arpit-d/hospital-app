@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hospital_app/enums/auth_result_status.dart';
+import 'package:hospital_app/services/auth_exception_handler.dart';
 
 class AuthenticationService {
   final FirebaseAuth firebaseAuth;
   const AuthenticationService(this.firebaseAuth);
+  static AuthResultStatus _status;
 
   Stream<User> get authStateChanges => firebaseAuth.idTokenChanges();
 
@@ -14,28 +17,39 @@ class AuthenticationService {
     await firebaseAuth.signOut();
   }
 
-  Future<String> signIn({String email, String password}) async {
+  Future<AuthResultStatus> signUp({email, password, displayName}) async {
     try {
-      await firebaseAuth.signInWithEmailAndPassword(
+      final authResult = await firebaseAuth.createUserWithEmailAndPassword(
           email: email, password: password);
 
-      return "signed in";
-    } on FirebaseAuthException catch (e) {
-      return e.message;
+      if (authResult.user != null) {
+        _status = AuthResultStatus.successful;
+        await firebaseAuth.currentUser.updateProfile(displayName: displayName);
+        await firebaseAuth.currentUser.reload();
+      } else {
+        _status = AuthResultStatus.undefined;
+      }
+    } catch (e) {
+      print('Exception @createAccount: $e');
+      _status = AuthExceptionHandler.handleException(e);
     }
+    return _status;
   }
 
-  Future<String> signUp(
-      {String email, String password, String displayName}) async {
+  Future<AuthResultStatus> signIn({String email, String password}) async {
     try {
-      await firebaseAuth.createUserWithEmailAndPassword(
+      final authResult = await firebaseAuth.signInWithEmailAndPassword(
           email: email, password: password);
-      await firebaseAuth.currentUser.updateProfile(displayName: displayName);
-      firebaseAuth.currentUser.reload();
 
-      return "signed in";
-    } on FirebaseAuthException catch (e) {
-      return e.message;
+      if (authResult.user != null) {
+        _status = AuthResultStatus.successful;
+      } else {
+        _status = AuthResultStatus.undefined;
+      }
+    } catch (e) {
+      print('Exception @createAccount: $e');
+      _status = AuthExceptionHandler.handleException(e);
     }
+    return _status;
   }
 }
